@@ -1,0 +1,35 @@
+#  Input file for the Fortran version of Plumeria.
+#  Lines that begin with a '#' are comment lines.
+#
+#  Output file name
+output/2ms_per_km_out.txt
+#
+#  Information on whether to read met. input file.
+#  The first line should supply a "yes" or "no".  If that line is "yes", the next line
+#  should be the name of the input file used.
+no                                 #are you supplying a file of atmospheric properties?
+input/metfiles/garbage.txt
+#
+#  Tropospheric properties (used only if no atmospheric file is used)
+#
+15.                  #Air temperature at vent, Celsius.
+0.                   #Air relative humidity
+-0.0065              #thermal lapse rate in troposphere (K/m upward--should be negative)
+11000.               #Elevation of tropopause (m asl)
+9000.                #Tropopause thickness, m
+0.001                #thermal lapse rate above tropopause (K/m--should be positive)
+0.00 0.002    90.0   #wind speed, m/s, optional wind slope (m/s per m), wind direction, degrees E of N.
+#
+#  Vent properties
+#
+0.                   #Vent elevation (m asl)
+50.0                 #vent diameter (m)
+100.                 #exit velocity (m/s)
+0.                   #mass fraction added water
+#
+#   Magma properties
+#
+900.                 #magma temperature
+0.03                 #mass fraction gas in magma
+1000.                #magma specific heat, J/kg K
+2500.                #magma density (DRE), kg/m3
