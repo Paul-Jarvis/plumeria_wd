@@ -46,8 +46,8 @@ Module1.o        \
 cashkarpqs.o     \
 derivs.o
 
-plume3:  $(OBJECTS) main.f90 zfunctions.o makefile
-	$(FC) main.f90 -o plume3 $(OBJECTS) $(FFLAGS)
+plume_wd:  $(OBJECTS) main.f90 zfunctions.o makefile
+	$(FC) main.f90 -o plume_wd $(OBJECTS) $(FFLAGS)
 
 FindT.o: FindT.f90 enthfunctions.o zfunctions.o Module1.o makefile
 	$(FC) -c FindT.f90 $(FFLAGS)
@@ -77,5 +77,5 @@ cashkarpqs.o:    cashkarpqs.f90 Module1.o derivs.o makefile
 	$(FC) -c cashkarpqs.f90 $(FFLAGS)
 
 clean:
-	rm  $(OBJECTS) plume3 *.mod 
+	rm  $(OBJECTS) plume_wd *.mod 
 
