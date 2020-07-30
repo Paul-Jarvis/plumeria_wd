@@ -71,7 +71,7 @@
         maxsteps = 10000           !Program will stop if this number of steps is exceeded.
         alpha = 0.09              !entrainment coefficient
         gamma_w = 0.5             !crossflow entrainmnent coefficient
-        n_exp   = 1.5             !Devenish exponent to entrainment equation
+        n_exp   = 1.0             !Devenish exponent to entrainment equation
 
         !Trap possible errors
         If (u(1).lt.5.) Then 
