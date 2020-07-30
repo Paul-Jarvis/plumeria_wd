@@ -2,7 +2,7 @@
 #  Lines that begin with a '#' are comment lines.
 #
 #  Output file name
-output/10ms.txt
+output/0ms.txt
 #
 #  Information on whether to read met. input file.
 #  The first line should supply a "yes" or "no".  If that line is "yes", the next line
