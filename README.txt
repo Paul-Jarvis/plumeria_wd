@@ -13,12 +13,11 @@ To run the model, you need a fortran compiler.  The free gnu fortran compiler ru
 In the makefile, you may need to modify lines 13-15, and 23-36 in the makefile depending on the compiler you are using.
    
 INSTALLATION INSTRUCTIONS:
-<p>After cloning the repository to your local computer, unzip the repository, compile the program, and try running it using the following  commands (or equivalents for your OS).  Comments explaning these command are listed to the right, and start with a hashtag (#)<br>
+After cloning the repository to your local computer, unzip the repository, compile the program, and try running it using the following  commands (or equivalents for your OS).  Comments explaning these command are listed to the right, and start with a hashtag (#)
     unzip plumeria_wd                       #unzips the zipped file<br>
-	 cd plumeria_wd                          #changes directories to the new directory of unzipped files<br>
-	 [edit plumeria_wd/makefile]             #Edit makefile to ensure that it is using the appropriate compiler<br>
-	 make                                    #compiles the program<br>
-	 ./plumeria_wd input/default.inp         #runs the program using the default input values stored in the file input/default.inp.<br>
-</p?	 
+    cd plumeria_wd                          #changes directories to the new directory of unzipped files<br>
+    [edit plumeria_wd/makefile]             #Edit makefile to ensure that it is using the appropriate compiler<br>
+    make                                    #compiles the program<br>
+    ./plumeria_wd input/default.inp         #runs the program using the default input values stored in the file input/default.inp.<br>	 
     
 After the test run, the output file "output/default_params_out.txt" should be identical to the file of the same name in the example_output directory.    
