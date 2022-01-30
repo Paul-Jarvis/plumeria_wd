@@ -248,7 +248,7 @@
 !******************************************************************************
 
        function wind(znow)
-       !Function that calculates the wind direction parallel to the plume
+       !Function that calculates the wind speed at elevation znow
        use Module2
        use Module1
        use precis_param
@@ -310,7 +310,7 @@
        !******************************************************************************
 
        function vy(znow)
-       !Function that calculates the x component of the wind vector
+       !Function that calculates the y component of the wind vector
        
        use Module1
        use Module2       
