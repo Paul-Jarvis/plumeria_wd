@@ -113,7 +113,7 @@
         !u()          = velocity (m/s)
         !z()          = vertical position (m, upward positive)
         
-        real(kind=ip), dimension(10000) :: Cp_mix, m_a, m_i, m_l, m_m, m_w, m_v, p, phi, &
+        real(kind=ip), dimension(30000) :: Cp_mix, m_a, m_i, m_l, m_m, m_w, m_v, p, phi, &
                              r, rho_air, rho_mix, s, T_air, T_mix, Time, u, &
                              ux, uy, uz, x, y, z
         
@@ -151,7 +151,7 @@
    real(kind=ip), parameter       ::  R_air = 286.98
 
    integer idensflag
-   !real(kind=ip) psize(10000,50)                                      !particle sizes
+   !real(kind=ip) psize(30000,50)                                      !particle sizes
    !real(kind=ip) pmass(50)                                            !particle mass
    
    end module Module2

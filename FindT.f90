@@ -8,12 +8,13 @@
       real(kind=ip) m_m,m_a,m_w,h_mix,Tmix,pnow,m_v,m_l,m_i                !arguments
       real(kind=ip) Cp_mix,Cpa_avg,Cpwi_avg,Cpwl_avg,Cpwv_avg, &
            H_ColdWater,H_freezing, &
-           H_sat,hdif,Hmixhi,Hmixlo,hmixnow, &
+           H_sat,hdif,Hmixhi,hmixlast,Hmixlo,hmixnow, &
            m_vColdWater,m_vfreezing, &
            TmixHi,TmixLst,TmixLo,T_sat,w_ColdWater,w_freezing, &
            w_s,x_a,x_w
       real(kind=ip) h_a,h_i,h_l,h_m,h_v,psat,tsat                           !functions
       integer i
+      character*1  answer
 
       !SET DEFAULT VALUES
       kgmole_air = 8.314 / 286.98         !molar weight of air
@@ -78,7 +79,7 @@
       end if
 
       !The following criteria are met only as a result of inaccuracies 
-      !in calculating T_sat, when it!s close
+      !in calculating T_sat, when it's close
       !to 273.15 K.  if T_sat<273.15 K and h_mix > H_freezing 
       !and h_mix<h_sat, the program tries to calculate
       !the enthalpy of liquid water at T<273.15, which causes it to blow up.
@@ -136,7 +137,10 @@
                     m_v * h_v(Tmix) + &
                     m_l * h_l(Tmix) + &
                     m_a * h_a(Tmix)
-          Do while ((Abs(hmixnow - h_mix) / h_mix > 0.001)) !Iterate on final solution
+          hmixlast = 0.0
+          Do while (((Abs(hmixnow - h_mix) / h_mix > 0.001)).and. &
+                    ((Abs(hmixnow - hmixlast)/hmixnow)>1.0e-07)) !Iterate on final solution
+                  hmixlast = hmixnow
                   if (hmixnow > h_mix) then
                           Hmixhi = hmixnow
                           TmixHi = Tmix

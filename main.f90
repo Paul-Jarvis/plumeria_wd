@@ -11,15 +11,16 @@
         real(kind=ip) snow, du, hdid_min, umin, vdot, sstep
         real(kind=ip) yscale(13)
         real(kind=ip) h_v, h_a, h_m, h_l, airtemp, AirPres, pathmax, &
-                       s_zmax, uzchgmin, uzlast, zmax
-        real(kind=ip) gperm3_l(10000), gperm3_i(10000)  
+                       s_zmax, uzchgmin, uzlast, zmax, &
+                       z_nb, r_nb, u_nb, rho_nb, Vdot_nb, mdot_solids
+        real(kind=ip) gperm3_l(30000), gperm3_i(30000)  
         real(kind=ip) zeta                      !z function
         real(kind=ip) vx, vy, wind              !functions of z
         character(len=1) answer
         logical          StillRising
-        integer          imax
-        !real(kind=ip)    nextheight
-        !logical          stopflag
+        integer          imax, step_nb
+        real(kind=ip)    nextheight
+        logical          stopflag
 
         external cashkarpqs
 
@@ -27,6 +28,12 @@
         external derivs
 
         !SET DEFAULT VALUES
+        z_nb       = 0.0                         !neutral buoyancy elevation
+        u_nb       = 0.0                         !upward velocity at nbl
+        rho_nb     = 0.0                         !density at nbl
+        r_nb       = 0.0                         !radius at nbl
+        Vdot_nb    = 0.0                         !volume flux at nbl
+        step_nb    = 1
         p_asl      = 1.013e05                    !pressure at sea level (used only if iatmlayers=1)
         kgmole_air = 8.314    / R_air            !specific gas constant for air
         kgmole_w   = 0.0180152                   !molar weight of water
@@ -39,10 +46,10 @@
         umin       = 0.01_ip                      !velocity below which the simulation stops
         s_zmax     = 99999._ip                   !value of s at zmax
         zmax       = 0.0_ip                      !maximum plume height
-        stopatthetop = .false.                    !=.true if we want to stop at the max. elevation
+        stopatthetop = .true.                    !=.true if we want to stop at the max. elevation
         StillRising  = .true.                    !.true if the plume has not yet reached its peak height
-        !nextheight = 200._ip
-        !stopflag   = .false.
+        nextheight = 200._ip
+        stopflag   = .false.
 
         call read_input                          !read input values
         
@@ -68,7 +75,7 @@
         T_ice = 258.15            !bottom of temperature range which liquid water & ice coexist
         
         !SET INTEGRATION PARAMETERS
-        maxsteps = 10000           !Program will stop if this number of steps is exceeded.
+        maxsteps = 30000          !Program will stop if this number of steps is exceeded.
         alpha = 0.09              !entrainment coefficient
         gamma_w = 0.5             !crossflow entrainmnent coefficient
         n_exp   = 1.0             !Devenish exponent to entrainment equation
@@ -116,6 +123,7 @@
         rho_mix(1) = 1 / (m_l(1) / rho_w + m_m(1) / rho_m + m_i(1) / rho_ice + &
                      (m_a(1) * R_air + m_v(1) * R_w) * T_mix(1) / p(1))
         mdot = rho_mix(1) * u(1) * 3.14159 * r(1) ** 2 !mass flux
+        mdot_solids = mdot* (1.0-m_w(1))                !mass fraction of solids
         gperm3_l(1) = 1000.*m_l(1)*rho_mix(1)          !g/m3 liquid water
         gperm3_i(1) = 1000.*m_i(1)*rho_mix(1)          !g/m3 ice
 
@@ -154,9 +162,9 @@
 3        format('      Using multilayered atmosphere from file ',a80)
       End If
       write(6,4)   r(1)*2., vent_elevation, u(1), T_mag-273.15, n_0, n_0air, Cp_m, &
-                            rho_m, rho_mix(1), mw, mdot, c_mix
+                            rho_m, rho_mix(1), mw, mdot, mdot_solids, c_mix
       write(11,4)  r(1)*2., vent_elevation, u(1), T_mag-273.15, n_0, n_0air, Cp_m, &
-                            rho_m, rho_mix(1), mw, mdot, c_mix
+                            rho_m, rho_mix(1), mw, mdot,  mdot_solids, c_mix
 4        format('                           Vent diameter (m):',f8.1,/, &
                 '                          Vent elevation (m):',f8.1,/, &
                 '                      Initial velocity (m/s):',f8.1,/, &
@@ -168,6 +176,7 @@
                 '                     Mixture density (kg/m3):',f8.3,/, &
                 '                   Mass fraction water added:',f8.3,/, &
                 '                           Mass flux, (kg/s):',e11.3,/, &
+                '                 Mass flux of solids, (kg/s):',e11.3,/, &
                 '                   Mixture sound speed (m/s):',f8.1)
 
 !        write(6,*) 'crossflow length scale=',mdot*(rho_air(1)-rho_mix(1))/(rho_mix(1)**2*windconst**3)
@@ -244,13 +253,13 @@
             !end if
 
             !ADJUST STEP SIZE BASED ON RESULTS OF LAST STEP
-            !if ((snow+hnext).gt.nextheight) then
-            !      sstep = nextheight-snow
-            !      nextheight = nextheight + 1000._ip
-            !      stopflag   = .true.
-            !   else
+            if ((snow+hnext).gt.nextheight) then
+                  sstep = nextheight-snow
+                  nextheight = nextheight + 1000._ip
+                  stopflag   = .true.
+               else
                  sstep = hnext
-            !end if
+            end if
 
             call derivs(snow,yarr,dydx)
             Call cashkarpqs(yarr, dydx, snow, sstep, yscale, hdid, hnext, derivs)
@@ -295,6 +304,17 @@
             rho_air(istep)  = p(istep) / (R_air * T_air(istep))
             gperm3_l(istep) = 1000.*m_l(istep)*rho_mix(istep)                     !g/m3 liquid water
             gperm3_i(istep) = 1000.*m_i(istep)*rho_mix(istep)                     !g/m3 ice
+
+            !FIND NEUTRAL BUOYANCY ELEVATION
+            if (stillrising.and.((rho_mix(istep-1).lt.rho_air(istep-1)).and. &
+                  ((rho_mix(istep)  .ge.rho_air(istep))))) then
+                 z_nb    = z(istep)
+                 rho_nb  = rho_mix(istep)
+                 r_nb    = r(istep)
+                 u_nb    = u(istep)
+                 Vdot_nb = pi*r_nb**2 * u_nb
+                 step_nb = istep
+            end if
 
             !SEE IF THE PLUME IS STILL RISING
             if (StillRising.and.(uz(istep).lt.0.0_ip)) then
@@ -375,9 +395,18 @@
         
         !calculate height from Sparks curve
         vdot = mdot*(1.-mw)/rho_m
-        write(6,9) zmax/1000., 1.67*vdot**0.259, 2.0*vdot**0.241
-        write(11,9) zmax/1000., 1.67*vdot**0.259, 2.0*vdot**0.241
+        write(6,9)  zmax/1000., z_nb/1000., step_nb, r_nb, u_nb, rho_nb, Vdot_nb, mdot, &
+                    mdot_solids, 1.67*vdot**0.259, 2.0*vdot**0.241
+        write(11,9) zmax/1000., z_nb/1000., step_nb, r_nb, u_nb, rho_nb, Vdot_nb, mdot, &
+                    mdot_solids,  1.67*vdot**0.259, 2.0*vdot**0.241
 9       format('                                   Maximum height =',f7.3,' km',/, &
+               '                          Neutral buoyancy height =',f7.2,' km at step ',i4,/, &
+               '                                         r at nbl =',f10.2,' m',/, &
+               '                                         u at nbl =',f10.2,' m/s',/, &
+               '                                       rho at nbl =',f6.4,' kg/m3',/, &
+               '                                      Vdot at nbl =',e12.4,' m3/s',/, &
+               '                                             mdot =',e12.4', kg/s',/, &
+               '                                      mdot_solids =',e12.4', kg/s',/, &
                '              height calculated from Sparks curve =',f7.3,/, &
                'height calculated from Mastin et al. (2009, eq. 1)=',f7.3,/, &
                'Successful completion')

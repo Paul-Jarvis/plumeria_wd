@@ -68,7 +68,6 @@
         mv_airnow = w_airnow / (1. + w_airnow)                 !mass fraction water vapor in ambient air
         h_airnow = ma_airnow * h_a(T_airnow) + mv_airnow * h_v(T_airnow)
 
-        !CALCULATE TEMPERATURE, RADIUS, DENSITY AT CURRENT ELEVATION
         Call FindT(m_mnow, m_anow, m_wnow, h_mixnow, T_mixnow, pnow, &
                    m_vnow, m_lnow, m_inow) !find temperature
         rho_mixnow = 1 / (m_lnow / rho_w + m_mnow / rho_m + m_inow / &

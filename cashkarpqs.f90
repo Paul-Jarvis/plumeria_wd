@@ -86,6 +86,7 @@
       b_54,b_61,b_62,b_63,b_64,b_65,c_1,c_3,c_4,c_6,dc_1,dc_3,dc_4,dc_5,dc_6
 
       real(kind=ip) cstar_1,cstar_3,cstar_4,cstar_5,cstar_6
+      character(len=1)  :: answer
 
       !Constants taken from p. 206 of Cash and Karp (ACM Transactions of on Mathematical
       !Software, v. 16, pp. 201-222)
@@ -127,6 +128,8 @@
       ytemp=y_in+h*(b_41*dydx+b_42*dydx2+b_43*dydx3)                         !at 3h/10
       call derivs(x+6.*h/10.,ytemp,dydx4)
       ytemp=y_in+h*(b_51*dydx+b_52*dydx2+b_53*dydx3+b_54*dydx4)              !at 6h/10
+      call derivs(x+h,ytemp,dydx5)
+      ytemp=y_in+h*(b_61*dydx+b_62*dydx2+b_63*dydx3+b_64*dydx4+b_65*dydx5)   !at h
       call derivs(x+h,ytemp,dydx5)
       ytemp=y_in+h*(b_61*dydx+b_62*dydx2+b_63*dydx3+b_64*dydx4+b_65*dydx5)   !at h
       call derivs(x+0.875*h,ytemp,dydx6)
