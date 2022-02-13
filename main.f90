@@ -121,7 +121,7 @@
         hmix = m_m(1) * h_m(T_mag, p(1)) + m_gas * h_v(T_mag) + m_a(1) * h_a(T_mag) + mw * h_l(T_water)
         Call FindT_init(m_m(1), m_a(1), m_w(1), hmix, T_mix(1), p(1), m_v(1), m_l(1), m_i(1)) 
         rho_mix(1) = 1 / (m_l(1) / rho_w + m_m(1) / rho_m + m_i(1) / rho_ice + &
-                     (m_a(1) * R_air + m_v(1) * R_w) * T_mix(1) / p(1))
+             (m_a(1) * R_air + m_v(1) * R_w) * T_mix(1) / p(1))
         mdot = rho_mix(1) * u(1) * 3.14159 * r(1) ** 2 !mass flux
         mdot_solids = mdot* (1.0-m_w(1))                !mass fraction of solids
         gperm3_l(1) = 1000.*m_l(1)*rho_mix(1)          !g/m3 liquid water

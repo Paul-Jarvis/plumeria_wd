@@ -167,8 +167,8 @@
         h_m = Cp_m * (T_K - T0) + ((p_Pa - p0) / rho_m)
         
 
-        print *, Cp_m, T_K, T0, p_Pa, p0, rho_m
-        print *,h_m
+        !print *, Cp_m, T_K, T0, p_Pa, p0, rho_m
+        !print *,h_m
                 
         End Function h_m
         
