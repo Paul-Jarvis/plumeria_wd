@@ -154,8 +154,21 @@
                 
         T0 = 273.15 !reference temperature
         p0 = 101300. !reference pressure
-                
+
+        if (Cp_m == 0) then
+           Cp_m = 1000.0
+        endif
+
+        if (rho_m == 0) then
+           rho_m = 2500.0
+        endif
+        
+
         h_m = Cp_m * (T_K - T0) + ((p_Pa - p0) / rho_m)
+        
+
+        print *, Cp_m, T_K, T0, p_Pa, p0, rho_m
+        print *,h_m
                 
         End Function h_m
         

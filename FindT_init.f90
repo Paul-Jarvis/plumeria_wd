@@ -4,11 +4,12 @@
       !use Module1
       use Module2
       use precis_param
-      
+
       implicit none 
-      real(kind=ip)  :: m_m,m_a,m_w,h_mix,Tmix,pnow,m_v,m_l,m_i                                  !arguments
-      real(kind=ip)  :: cp_a,cp_l,h_a,h_l,h_m,h_v,psat,tsat                                      !functions
-      real(kind=ip)  :: Cp_mix,Cpa_avg,Cpwi_avg,Cpwl_avg,Cpwv_avg,H_boiling,H_ColdWater, &       !other real variables
+      real(kind=8), intent(out) :: Tmix
+      real(kind=8)  :: m_m,m_a,m_w,h_mix,pnow,m_v,m_l,m_i                                  !arguments
+      real(kind=8)  :: cp_a,cp_l,h_a,h_l,h_m,h_v,psat,tsat                                      !functions
+      real(kind=8)  :: Cp_mix,Cpa_avg,Cpwi_avg,Cpwl_avg,Cpwv_avg,H_boiling,H_ColdWater, &       !other real variables
                  H_toboil,hmixnow,m_vfreezing,Tboil,w_freezing
 
       Cpa_avg = 1060.                 !average value of cp_air between 270 and 1000 K
@@ -31,7 +32,9 @@
       H_ColdWater = m_m * h_m(273.15, pnow) + m_a * h_a(273.15) + &
                     m_vfreezing * h_v(273.15) + (m_w - m_vfreezing) * h_l(273.15)      
 
+      print *, h_m(273.15, pnow), h_v(273.15), h_l(273.15)
       If (h_mix.gt.H_toboil) then                  !If we're above the boiling regime
+         print *, 'Above boiling regime'
           m_v = m_w
           m_l = 0.
           m_i = 0.
@@ -44,11 +47,13 @@
             hmixnow = m_m * h_m(Tmix, pnow) + m_v * h_v(Tmix) + m_a * h_a(Tmix)
           end do
        else if (h_mix.gt.H_boiling) then       !If we're within the boiling regime
+         print *, 'Within boiling regime'
           Tmix = Tboil
           m_v = m_w * (h_mix - H_boiling) / (H_toboil - H_boiling)
           m_l = m_w - m_v
           m_i = 0.
        else if (h_mix.gt.H_ColdWater) then           !If we're below the boiling regime but above the freezing regime
+         print *, 'Below boiling regime and above freezing'
           m_l = m_w
           m_i = 0.
           m_v = 0.
@@ -59,7 +64,9 @@
             Cp_mix = m_m * Cp_m + m_a * cp_a(Tmix) + m_l * cp_l(Tmix)
             Tmix = Tmix + (h_mix - hmixnow) / Cp_mix
             hmixnow = m_m * h_m(Tmix, pnow) + m_v * h_v(Tmix) + m_l * h_l(Tmix) + m_a * h_a(Tmix)
-          end do
+         end do
+      else
+         print *, 'Does not enter any clause'
       End If
-            
+
     end subroutine findT_init

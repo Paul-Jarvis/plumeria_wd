@@ -24,7 +24,7 @@ ifeq ($(RUN), DEBUG)
     FFLAGS =  -g3 -pg -Wall -fbounds-check -pedantic -fimplicit-none -Wunderflow -Wuninitialized -ffpe-trap=invalid,zero,overflow -fdefault-real-8
 endif
 ifeq ($(RUN), OPT)
-    FFLAGS =
+    FFLAGS = -fPIC
 endif
 
 #Specified compiler.  If you prefer some compiler other than gfortran, modify this line.

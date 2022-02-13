@@ -1,0 +1,241 @@
+subroutine Findh_a(h_a, T_K)
+                
+!       Enthalpy of air calculated using polynomial coefficients for cp_air on p. 718 of Moran & Shapiro (1992).
+!       I start with the known enthalpy of air at T=200 K, taken from Table A-16 of Moran & Shapiro (1992)
+                
+       use precis_param
+       implicit none
+       real(kind=8), intent(out) :: h_a
+       real(kind=8) T_K, R_air
+       real(kind=8) delta, beta, T0, h0, alpha, gamma, epsilon
+       
+       R_air = 286.98                   !gas constant for air (J/(kg K))
+       h0 = 270110.                     !enthalpy at T=270 K (from Table A-15 of Moran & Shapiro, 1992)
+       T0 = 270.
+       alpha = 3.653
+       beta = -0.001337
+       gamma = 0.000003294
+       delta = -0.000000001913
+       epsilon = 2.763E-13
+       
+       h_a = h0 + R_air * (alpha * (T_K - T0) + (beta / 2) * (T_K ** 2 - T0 ** 2) + &
+             (gamma / 3) * (T_K ** 3 - T0 ** 3) + (delta / 4) * (T_K ** 4 - T0 ** 4) + &
+             (epsilon / 5) * (T_K ** 5 - T0 ** 5))
+
+       end subroutine Findh_a
+                
+!******************************************************************************         
+        
+        subroutine Findcp_a(cp_a, T_K)
+                
+       !cp of air calculated using polynomial coefficients on p. 718 of Moran & Shapiro (1992).
+       !Based on NASA SP-273, U.S. Government Printing Office, Washington, D.C. 1971.
+       !Moran, M.J., and Shapiro, H.N., Fundamentals of Engineering Thermodynamnics, 2nd Ed.,
+       !John Wiley & Sons, New York, 804pp.
+                
+       use precis_param
+       implicit none
+       real(kind=ip) cp_a, T_K
+       real(kind=ip) delta, beta, R_air, alpha, gamma, epsilon
+                
+       R_air = 286.98                         !R for air (J/(kg K))
+       alpha = 3.653                          !polynomial fitting coefficients
+       beta = -0.001337
+       gamma = 0.000003294
+       delta = -0.000000001913
+       epsilon = 2.763E-13
+                
+       cp_a = R_air * (alpha + beta * T_K + gamma * T_K ** 2 + delta * T_K ** 3 + epsilon * T_K ** 4)
+
+       End subroutine Findcp_a
+        
+!****************************************************************************** 
+
+       subroutine Findcp_l(cp_l, T_K)
+
+       use precis_param
+       implicit none
+       real(kind=ip)  T_K, cp_l
+       real(kind=ip)  cp(11),tk(11)
+       integer i
+
+       data cp/4227.9,4188.,4183.3,4183.3,4182.4,4181.7,4182.9,4187.,4194.3,4204.5,4217.2/
+       data tk/273.25,283.25,293.25,303.25,313.25,323.25,333.25,343.25,353.25,363.25,373.25/
+
+       if (T_K<tk(1)) then
+          cp_l = cp(1)                   !needed for some cases
+          write(6,*) "Warning: temperature below 0.1 C"
+          stop
+       else if (T_K>tk(11)) then
+          cp_l = cp(11)
+          write(6,*) "Warning: liquid water temperature above 100 C"
+       else
+          do i=1,11
+             if (tk(i)>T_K) then
+                cp_l = cp(i - 1) + (T_K - tk(i - 1)) * (cp(i - 1) + cp(i)) / (tk(i) - tk(i - 1))
+                exit
+             end if
+          end do
+       end if
+
+     end subroutine Findcp_l
+     
+
+!******************************************************************************
+
+    subroutine Findh_i(h_i, T_K)
+
+     !Function that gives enthalpy of ice as a function of temperature.  This is a skeleton
+     !first cut, which assumes that the enthalpy is independent of pressure and that the the
+     !enthalpy is simply the enthalpy of ice at T=0 C, p=1 atm (-333430), plus
+     !cp of ice (~1850 J/kg K) times the temperature in Celsius.:
+     
+     use precis_param
+     implicit none
+     real(kind=ip) h_i, T_K
+
+     h_i = -333430 + 1850. * (T_K - 273.15)
+
+     end subroutine Findh_i
+
+!****************************************************************************** 
+        subroutine Findh_l(h_l, T_K)
+        
+       use precis_param
+       implicit none
+       real(kind=ip) h_l, T_K
+       !real(kind=ip) h0
+       real(kind=ip) cp(11), tk(11), hnow(11)
+       integer i
+                
+       !After much tribulation, I found that you can get a reasonable estimate of the enthalpy of
+       !the liquid water by simply multiplying cp*dt.  cp changes very non-linearly with temperature,
+       !and even a 6-order polynomial equation, attempted using best-fit routines in both Excel and
+       !Matlab, were unable to give acceptable estimates of cp versus temperature.  So instead, I have
+       !compiled a table of enthalpies (below), and cp, at 10-degree increments, from 0.1 C to 99 C.
+       !at saturation pressure.  For a given temperature, I calculate enthalpy by taking the enthalpy
+       !value at the next lower temperature in the table, and then use the formula:
+       !h = h(last T) + cp*delta(T).  This gives values that are 0.3 to 0.0005% from those in Haar et al.
+       !with the lowest accuracies at lower temperatures.
+
+       !Reference:
+       !Haar, L., Gallagher, J.S., and Kell, G.S., 1984, NBS/NRC Steam Tables, Hemisphere Publishing 
+       !Corporation, New York, 320 pp.
+                
+       data cp/4227.9,4188.,4183.3,4183.3,4182.4,4181.7,4182.9,4187.,4194.3,4204.5,4217.2/
+       data tk/273.25,283.25,293.25,303.25,313.25,323.25,333.25,343.25,353.25,363.25,373.25/
+       data hnow/381.14,42406.,84254.,126090.,167920.,209750.,251570.,293430.,335350.,377350.,419490./
+                
+       If (tk(1)>=T_K) Then
+               h_l = hnow(1) + 4180. * (T_K - tk(1))
+         ElseIf (tk(11)<=T_K) Then 
+               h_l = hnow(11) + 4200. * (T_K - tk(11))
+       Else
+          do i = 1,11
+             If (tk(i)>T_K) Then
+                h_l = hnow(i - 1) + (T_K - tk(i - 1)) * (cp(i - 1) + cp(i)) / 2
+                exit
+             end if
+          end do
+       end If
+                
+                
+      end subroutine Findh_l
+        
+!******************************************************************************
+        
+        subroutine Findh_m(h_m, T_K, ventElev, CpMag)
+        
+        !function that calculate magma enthalpy, assuming constant specific heat
+        !and density
+        
+        use Module2
+        use precis_param
+        implicit none
+!        real(kind=ip), external :: AirPres
+!        real(kind=ip) h_m, T_K, ventElev, CpMag
+!        real(kind=ip) T0, p0, p_Pa
+        real(kind=8), external :: AirPres
+        real(kind=8), intent(out) :: h_m
+        real(kind=8) T_K, ventElev, CpMag
+        real(kind=8) T0, p0, p_Pa
+                
+        T0 = 273.15 !reference temperature
+        p0 = 101300. !reference pressure
+
+        p_Pa = AirPres(ventElev)
+        h_m = CpMag * (T_K - T0) !+ ((p_Pa - p0) / rho_m)
+
+        End subroutine Findh_m
+        
+!****************************************************************************** 
+        subroutine Findh_v(h_v, T_K)
+                
+        !function that gives the enthalpy of water vapor
+        use precis_param
+        implicit none
+        real(kind=8), intent(out) :: h_v
+        real(kind=8) T_K
+        real(kind=8) T0, delta, beta, h0, alpha, gamma, epsilon, cp
+                
+        !The following are polynomial coefficients for specific heat of water
+        !vapor, taken from Moran & Shapiro, "Engineering Thermodynamics", 2nd. Ed.,
+        !John Wiley & Sons, 1984, p. 718.
+        alpha = 4.07
+        beta = -0.001108
+        gamma = 0.000004152
+        delta = -0.000000002964
+        epsilon = 0.000000000000807
+        h0 = 2500700.                              !enthalpy at T=0.1 C, p=0.1013 MPa
+        T0 = 273.15                                !reference temperature (K)
+        
+        cp = (8.314 / 0.0180152) * (alpha + beta * T_K + gamma * T_K ** 2 + &
+              delta * T_K ** 3 + epsilon * T_K ** 4)
+        
+        h_v = h0 + (8.314 / 0.0180152) * (alpha * (T_K - T0) + (beta / 2.) * &
+              (T_K ** 2 - T0 ** 2) + (gamma / 3.) * (T_K ** 3 - T0 ** 3) + &
+              (delta / 4.) * (T_K ** 4 - T0 ** 4) + (epsilon / 5.) * (T_K ** 5 - T0 ** 5))
+                
+        end subroutine Findh_v
+        
+!******************************************************************************
+                
+        subroutine FindTsat(Tsat, p_Pa)
+                
+        !function that gives saturation temperature of water at the given pressure
+        use precis_param
+        implicit none
+        !real(kind=ip) Tsat, psat, p_Pa
+        real(kind=ip) Tsat, p_Pa
+        real(kind=ip), external :: psat
+        real(kind=ip) T_boiling, R_w, pnow
+        real(kind=ip) h_v, h_l
+        pnow = 100000.                                !default value
+                
+        R_w = 8.314 / 0.0180015                       !gas constant for water
+                
+        T_boiling = 182.82 * p_Pa ** 0.0611           !first guess, using best-fit curve
+        pnow = psat(T_boiling)
+                
+        Do while (Abs(pnow - p_Pa).ge.10.)            !Adjust until we get within 10 Pascals
+                !If T_boiling < 273.15 Then
+                !This statement keeps the function h_l from blowing up when it!s given a temperature
+                !value less than freezing.
+                !    T_boiling = T_boiling + (p_Pa - psat(T_boiling)) * R_w * T_boiling ** 2 / _
+                !!        ((h_v(273.15) - h_l(273.15)) * p_Pa)
+                !    Else
+           call Findh_v(h_v, T_boiling)
+           call Findh_l(h_l, T_boiling)
+                !T_boiling = T_boiling + (p_Pa - psat(T_boiling)) * R_w * T_boiling ** 2 / &
+                !((h_v(T_boiling) - h_l(T_boiling)) * p_Pa)
+                T_boiling = T_boiling + (p_Pa - psat(T_boiling)) * R_w * T_boiling ** 2 / &
+                            ((h_v - h_l) * p_Pa)
+                !End If
+                pnow = psat(T_boiling)
+        end do
+                
+        Tsat = T_boiling
+                
+        End subroutine FindTsat
+
+      
